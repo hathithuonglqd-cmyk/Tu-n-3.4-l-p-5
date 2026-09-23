@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sân Chơi Tri Thức - Bài Tập Hằng Ngày</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --secondary: #4ECDC4;
+            --yellow: #FFE66D;
+            --blue: #45B7D1;
+            --dark: #2B2D42;
+        }
+
+        * { box-sizing: border-box; font-family: 'Nunito', 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #E8F5E9; margin: 0; padding: 10px; color: var(--dark); }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 3px solid var(--secondary);
+        }
+
+        h1 { text-align: center; color: var(--primary); font-size: 1.5rem; margin-top: 5px; }
+        
+        .login-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: flex;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .login-box {
+            background: white; padding: 25px; border-radius: 20px;
+            text-align: center; width: 90%; max-width: 380px;
+            border: 4px solid var(--yellow);
+        }
+        .login-box input {
+            width: 100%; padding: 12px; margin: 10px 0;
+            border: 2px solid #ddd; border-radius: 10px; font-size: 16px;
+        }
+
+        .header-info {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #FFF9E6; padding: 12px; border-radius: 12px; margin-bottom: 15px;
+            border: 2px dashed var(--yellow); font-weight: bold; font-size: 0.95rem;
+        }
+        .timer { font-size: 1.1rem; color: var(--primary); }
+
+        .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn {
+            flex: 1; padding: 10px 5px; border: none; background: #EEE;
+            border-radius: 10px; font-weight: bold; cursor: pointer;
+            font-size: 0.85rem; transition: 0.3s; color: var(--dark);
+        }
+        .tab-btn.active { background: var(--secondary); color: white; }
+
+        .question-card {
+            background: #F9F9F9; border-radius: 12px; padding: 15px;
+            margin-bottom: 15px; border-left: 5px solid var(--secondary);
+        }
+        .q-title { font-weight: bold; font-size: 1rem; margin-bottom: 10px; color: #1D3557; line-height: 1.4; }
+        .badge { background: var(--blue); color: white; padding: 2px 6px; border-radius: 6px; font-size: 0.75rem; margin-right: 5px; }
+
+        .options-group { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+        .option-label {
+            background: white; padding: 10px 12px; border-radius: 8px;
+            border: 2px solid #E0E0E0; cursor: pointer; font-size: 0.95rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .option-label:hover { border-color: var(--secondary); background: #E8F8F5; }
+        
+        input[type="text"], textarea {
+            padding: 10px; border: 2px solid #CCC; border-radius: 8px;
+            width: 100%; font-size: 0.95rem; margin-top: 5px;
+        }
+        textarea { height: 70px; resize: vertical; }
+
+        .btn-submit {
+            display: block; width: 100%; padding: 14px; background: #2ECC71;
+            color: white; border: none; border-radius: 12px; font-size: 1.1rem;
+            font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 0 #27AE60;
+        }
+        
+        .feedback {
+            margin-top: 10px; padding: 10px; border-radius: 8px;
+            font-weight: bold; display: none; line-height: 1.4; font-size: 0.9rem;
+        }
+        .feedback.correct { background: #D4EDDA; color: #155724; border: 1px solid #C3E6CB; }
+        .feedback.wrong { background: #F8D7DA; color: #721C24; border: 1px solid #F5C6CB; }
+
+        .result-screen {
+            text-align: center; padding: 20px; display: none; background: #FFF9E6;
+            border-radius: 15px; border: 3px solid var(--yellow); margin-bottom: 20px;
+        }
+        .score-display { font-size: 3rem; color: var(--primary); font-weight: bold; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+<div class="login-overlay" id="loginModal">
+    <div class="login-box">
+        <h2><i class="fa-solid fa-graduation-cap" style="color: #FF6B6B;"></i> SÂN CHƠI TRI THỨC</h2>
+        <p>Vui lòng điền thông tin để bắt đầu bài thi:</p>
+        <input type="text" id="studentName" placeholder="Nhập Họ và Tên..." required>
+        <input type="text" id="studentClass" placeholder="Nhập Lớp (Ví dụ: 5A)..." required>
+        <button class="btn-submit" onclick="startQuiz()"> BẮT ĐẦU LÀM BÀI</button>
+    </div>
+</div>
+
+<div class="container">
+    <h1><i class="fa-solid fa-gamepad"></i> BÀI TẬP HẰNG NGÀY (60 CÂU)</h1>
+    
+    <div class="header-info">
+        <div>
+            <span><i class="fa-solid fa-user"></i> <span id="displayName">---</span></span> | 
+            <span><i class="fa-solid fa-school"></i> <span id="displayClass">---</span></span>
+        </div>
+        <div class="timer"><i class="fa-solid fa-clock"></i> <span id="timeDisplay">45:00</span></div>
+    </div>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('vietnamese')"><i class="fa-solid fa-book"></i> Tiếng Việt</button>
+        <button class="tab-btn" onclick="switchTab('math')"><i class="fa-solid fa-calculator"></i> Toán</button>
+        <button class="tab-btn" onclick="switchTab('english')"><i class="fa-solid fa-language"></i> Tiếng Anh</button>
+    </div>
+
+    <form id="quizForm">
+        <div id="tab-vietnamese" class="tab-content">
+            <div id="vn-container"></div>
+        </div>
+
+        <div id="tab-math" class="tab-content" style="display: none;">
+            <div id="math-container"></div>
+        </div>
+
+        <div id="tab-english" class="tab-content" style="display: none;">
+            <div id="eng-container"></div>
+        </div>
+
+        <div class="result-screen" id="resultScreen">
+            <h2><i class="fa-solid fa-trophy" style="color: #FFD700;"></i> KẾT QUẢ BÀI THI</h2>
+            <div class="score-display" id="scoreText">0 / 10</div>
+            <p id="resultDetail" style="font-size: 1rem; color: #555;"></p>
+        </div>
+
+        <button type="button" id="btnSubmitExam" class="btn-submit" onclick="submitExam()"><i class="fa-solid fa-paper-plane"></i> NỘP BÀI THI</button>
+    </form>
+</div>
+
+<script>
+    // 20 CÂU TIẾNG VIỆT (Nội dung theo ảnh & Bài 6)
+    const vnQuestions = [
+        { type: "essay", q: "Viết lại câu sau bằng đại từ để tránh lặp từ:<br><i>'Con mèo đen đang nằm phơi nắng trên sân, bóng con mèo đen như hòa làm một với bộ lông, tạo thành một cục bông đen tròn.'</i>", keywords: ["nó", "của nó", "chú mèo"] },
+        { type: "essay", q: "Viết lại câu sau bằng đại từ để tránh lặp từ:<br><i>'Dì Na vừa về đến cổng, cu Tí đã chạy ra đón dì Na ngay.'</i>", keywords: ["dì", "cô", "người"] },
+        { type: "essay", q: "Viết lại câu sau bằng đại từ để tránh lặp từ:<br><i>'Cái bàn gỗ bên cửa sổ đã cũ nhưng bà chủ chẳng chịu thay vì nghĩ rằng cái bàn gỗ vẫn còn dùng được.'</i>", keywords: ["nó", "chiếc bàn"] },
+        { type: "mcq", q: "Trong bài 'Ngôi sao sân cỏ', nhân vật chính có ước mơ trở thành gì?", options: ["Cầu thủ bóng đá", "Ca sĩ", "Họa sĩ", "Bác sĩ"], a: "Cầu thủ bóng đá" },
+        { type: "mcq", q: "Bài thơ 'Tiếng hạt nảy mầm' nói về điều gì?", options: ["Sự sống mầm cây và niềm vui tuổi học trò", "Tình cảm thầy cô", "Cảnh đẹp thiên nhiên", "Tình bạn"], a: "Sự sống mầm cây và niềm vui tuổi học trò" },
+        { type: "fill", q: "Giải nghĩa từ khó trong bài 'Ngôi sao sân cỏ': Từ 'say mê' nghĩa là thích đến mức _____", a: "đam mê" },
+        { type: "mcq", q: "Tác dụng của đại từ trong văn bản là gì?", options: ["Thay thế từ ngữ để tránh lặp từ", "Nối các câu", "Bộc lộ cảm xúc", "Chỉ thời gian"], a: "Thay thế từ ngữ để tránh lặp từ" },
+        { type: "fill", q: "Điền đại từ thích hợp: 'Nam rất chăm học. _____ luôn đạt điểm cao.'", a: "Cậu ấy" },
+        { type: "mcq", q: "Từ nào đồng nghĩa với từ 'dũng cảm'?", options: ["Gan dạ", "Nhút nhát", "Sợ hãi", "Hiền lành"], a: "Gan dạ" },
+        { type: "fill", q: "Điền đại từ thích hợp: 'Hoa và Mai là bạn thân. _____ thường đi học cùng nhau.'", a: "Họ" },
+        { type: "mcq", q: "Câu 'Hạt mầm nhỏ bé đang cựa mình thức dậy.' sử dụng biện pháp nghệ thuật gì?", options: ["Nhân hóa", "So sánh", "Ẩn dụ", "Điệp từ"], a: "Nhân hóa" },
+        { type: "essay", q: "Nêu nội dung chính của bài đọc 'Ngôi sao sân cỏ' (1-2 câu):", keywords: ["ước mơ", "bóng đá", "cố gắng", "nỗ lực"] },
+        { type: "mcq", q: "Trong các từ sau, từ nào là đại từ?", options: ["Nó", "Đẹp", "Chạy", "Ngôi nhà"], a: "Nó" },
+        { type: "fill", q: "Điền dấu câu thích hợp vào cuối câu: 'Ôi, bàn thắng tuyệt đẹp làm sao[ ? ]'", a: "!" },
+        { type: "mcq", q: "Từ nào trái nghĩa với từ 'trầm lặng'?", options: ["Sôi nổi", "Yên tĩnh", "Lặng lẽ", "Rụt rè"], a: "Sôi nổi" },
+        { type: "fill", q: "Điền 'ch' hoặc 'tr' vào chỗ trống: '...ung thực'", a: "tr" },
+        { type: "mcq", q: "Chủ đề chính của Bài 6 là gì?", options: ["Ngôi sao sân cỏ", "Trường học", "Gia đình", "Quê hương"], a: "Ngôi sao sân cỏ" },
+        { type: "essay", q: "Đặt một câu có sử dụng đại từ 'chúng tôi':", keywords: ["chúng tôi", "chúng tớ"] },
+        { type: "mcq", q: "Đại từ 'thế' trong câu 'Bạn làm sao thì tôi làm thế' dùng để làm gì?", options: ["Thay thế cho hành động", "Chỉ người", "Chỉ vật", "Hỏi"], a: "Thay thế cho hành động" },
+        { type: "fill", q: "Hoàn thành câu ca dao: 'Thương người như thể thương _____'", a: "thân" }
+    ];
+
+    // 20 CÂU TOÁN (Nội dung theo ảnh & Hỗ số)
+    const mathQuestions = [
+        { type: "fill", q: "Tính giá trị biểu thức: 7/4 + 7/24 - 1/6 = [ ? ] (Nhập phân số dạng a/b)", a: "15/8" },
+        { type: "fill", q: "Tính giá trị biểu thức: 3 - (8/5 + 9/25) = [ ? ] (Nhập phân số dạng a/b)", a: "26/25" },
+        { type: "fill", q: "Tính giá trị biểu thức: 12/7 x 7/6 : 3/2 = [ ? ] (Nhập phân số hoặc số nguyên)", a: "4/3" },
+        { type: "fill", q: "Tính giá trị biểu thức: 14/5 : (5/4 x 6/25) = [ ? ] (Nhập phân số hoặc số nguyên)", a: "28/3" },
+        { type: "mcq", q: "Chuyển hỗn số 2 3/5 thành phân số:", options: ["13/5", "11/5", "6/5", "10/5"], a: "13/5" },
+        { type: "mcq", q: "Phân số 17/4 chuyển thành hỗn số là:", options: ["4 1/4", "4 3/4", "3 1/4", "4 2/4"], a: "4 1/4" },
+        { type: "fill", q: "Thực hiện phép tính: 1 1/2 + 2 1/3 = [ ? ] (Nhập phân số a/b)", a: "23/6" },
+        { type: "mcq", q: "So sánh hai hỗn số: 3 2/5 ... 3 4/5", options: ["<", ">", "="], a: "<" },
+        { type: "fill", q: "Tìm X, biết: X - 1 1/4 = 2 1/2. Đáp số X = [ ? ] (Nhập phân số a/b)", a: "15/4" },
+        { type: "mcq", q: "Hỗn số 5 2/3 gồm có:", options: ["Phần nguyên là 5 và phần phân số là 2/3", "Phần nguyên là 2 và phần phân số là 5/3", "Phần nguyên là 3", "Không có phần nguyên"], a: "Phần nguyên là 5 và phần phân số là 2/3" },
+        { type: "fill", q: "Rút gọn phân số 24/36 về tối giản:", a: "2/3" },
+        { type: "mcq", q: "Phần phân số của hỗn số luôn luôn:", options: ["Bé hơn 1", "Lớn hơn 1", "Bằng 1", "Bằng 0"], a: "Bé hơn 1" },
+        { type: "fill", q: "Tính: 2 1/3 x 1 1/2 = [ ? ] (Nhập phân số a/b)", a: "7/2" },
+        { type: "essay", q: "Giải bài toán: Một tấm lưới sắt hình chữ nhật có chiều dài 2 1/2m, chiều rộng 3/4m. Tính diện tích tấm lưới đó (Viết đáp số dạng phân số):", a: "15/8" },
+        { type: "mcq", q: "Số thích hợp điền vào chỗ chấm: 3 4/10 = 3,...", options: ["4", "04", "004", "40"], a: "4" },
+        { type: "fill", q: "Tính: 4 2/5 : 2 = [ ? ] (Nhập phân số a/b)", a: "11/5" },
+        { type: "mcq", q: "So sánh: 4 1/2 ... 3 4/5", options: [">", "<", "="], a: ">" },
+        { type: "fill", q: "Chuyển phân số 25/100 về phân số tối giản:", a: "1/4" },
+        { type: "essay", q: "Tìm một phân số nằm giữa 1/3 và 1/2:", keywords: ["5/12", "7/18", "4/10", "2/5"] },
+        { type: "fill", q: "Điền số còn thiếu vào chỗ chấm: 1m 25cm = 1 .../100m", a: "25" }
+    ];
+
+    // 20 CÂU TIẾNG ANH (Chủ đề Ngữ âm / Trọng âm Global Success 5 - Loigiaihay)
+    const engQuestions = [
+        { type: "mcq", q: "Pronunciation: Choose the word whose underlined part is pronounced differently:<br><b><u>a</u>pple, <u>a</u>nt, <u>a</u>rchitect, <u>a</u>sk</b>", options: ["architect", "apple", "ant", "ask"], a: "architect" },
+        { type: "mcq", q: "Stress: Choose the word that has a different stress pattern:", options: ["teacher", "doctor", "student", "enjoy"], a: "enjoy" },
+        { type: "mcq", q: "Stress: Choose the word with stress on the FIRST syllable:", options: ["present", "repeat", "complete", "invite"], a: "present" },
+        { type: "mcq", q: "Pronunciation: Choose the word with a different sound:<br><b>th<u>i</u>nk, th<u>i</u>s, th<u>a</u>nk, th<u>i</u>ng</b>", options: ["thank", "think", "this", "thing"], a: "thank" },
+        { type: "mcq", q: "Stress: Which word has stress on the SECOND syllable?", options: ["banana", "apple", "orange", "lemon"], a: "banana" },
+        { type: "mcq", q: "Pronunciation: Choose the word whose underlined part is pronounced differently:<br><b>c<u>a</u>t, c<u>a</u>r, h<u>a</u>t, b<u>a</u>g</b>", options: ["car", "cat", "hat", "bag"], a: "car" },
+        { type: "mcq", q: "Stress: Choose the word with a different stress pattern:", options: ["beautiful", "important", "family", "favorite"], a: "important" },
+        { type: "mcq", q: "Pronunciation: Choose the odd sound:<br><b><u>ch</u>air, <u>ch</u>ool, <u>ch</u>ildren, <u>ch</u>icken</b>", options: ["school", "chair", "children", "chicken"], a: "school" },
+        { type: "mcq", q: "Stress: Which word is stressed on the 1st syllable?", options: ["summer", "decide", "return", "protect"], a: "summer" },
+        { type: "mcq", q: "Pronunciation: Choose the word ending in /s/ sound:", options: ["cats", "dogs", "pigs", "birds"], a: "cats" },
+        { type: "mcq", q: "Stress: Choose the word with a different stress pattern:", options: ["activity", "computer", "information", "vocabulary"], a: "information" },
+        { type: "mcq", q: "Pronunciation: Choose the word with different 'ed' pronunciation:<br><b>play<u>ed</u>, watch<u>ed</u>, listen<u>ed</u>, liv<u>ed</u></b>", options: ["watched", "played", "listened", "lived"], a: "watched" },
+        { type: "fill", q: "Complete the phonetic word: 'P h o t o g r a p h' has stress on the _____ syllable. (1st / 2nd / 3rd)", a: "1st" },
+        { type: "mcq", q: "Stress: Choose the word that has stress on the 2nd syllable:", options: ["polite", "happy", "clever", "friendly"], a: "polite" },
+        { type: "mcq", q: "Pronunciation: Choose the word whose underlined part is pronounced /i:/:<br><b>s<u>ee</u>, b<u>e</u>d, p<u>e</u>n, r<u>e</u>d</b>", options: ["see", "bed", "pen", "red"], a: "see" },
+        { type: "mcq", q: "Stress: Choose the word with stress on the FIRST syllable:", options: ["animal", "expensive", "delicious", "together"], a: "animal" },
+        { type: "mcq", q: "Pronunciation: Choose the word with sound /aɪ/:<br><b>l<u>i</u>ke, l<u>i</u>ve, g<u>i</u>ve, s<u>i</u>t</b>", options: ["like", "live", "give", "sit"], a: "like" },
+        { type: "fill", q: "How many syllables are there in the word 'COMMUNICATION'?", a: "5" },
+        { type: "mcq", q: "Stress: Which word has a DIFFERENT stress pattern?", options: ["mother", "father", "brother", "thirteen"], a: "thirteen" },
+        { type: "essay", q: "Tự luận: Write 1 English word with 3 syllables (Viết 1 từ Tiếng Anh có 3 âm tiết):", keywords: ["banana", "computer", "beautiful", "umbrella", "dinosaur", "hospital"] }
+    ];
+
+    function renderQuiz() {
+        let vnHTML = "";
+        vnQuestions.forEach((q, i) => vnHTML += createQuestionHTML('vn', i, q));
+        document.getElementById('vn-container').innerHTML = vnHTML;
+
+        let mathHTML = "";
+        mathQuestions.forEach((q, i) => mathHTML += createQuestionHTML('math', i, q));
+        document.getElementById('math-container').innerHTML = mathHTML;
+
+        let engHTML = "";
+        engQuestions.forEach((q, i) => engHTML += createQuestionHTML('eng', i, q));
+        document.getElementById('eng-container').innerHTML = engHTML;
+    }
+
+    function createQuestionHTML(prefix, idx, q) {
+        let content = `<div class="question-card" id="qc-${prefix}-${idx}">
+            <div class="q-title"><span class="badge">Câu ${idx+1}</span> ${q.q}</div>`;
+
+        if (q.type === 'mcq') {
+            content += `<div class="options-group">
+                ${q.options.map(opt => `
+                    <label class="option-label">
+                        <input type="radio" name="${prefix}_${idx}" value="${opt}"> ${opt}
+                    </label>
+                `).join('')}
+            </div>`;
+        } else if (q.type === 'fill') {
+            content += `<div><input type="text" id="${prefix}_${idx}_input" placeholder="Nhập câu trả lời..."></div>`;
+        } else if (q.type === 'essay') {
+            content += `<div><textarea id="${prefix}_${idx}_essay" placeholder="Nhập câu trả lời đầy đủ..."></textarea></div>`;
+        }
+
+        content += `<div class="feedback"></div></div>`;
+        return content;
+    }
+
+    let timerInterval;
+    function startQuiz() {
+        const name = document.getElementById('studentName').value.trim();
+        const cls = document.getElementById('studentClass').value.trim();
+
+        if (!name || !cls) {
+            alert('Vui lòng nhập đầy đủ Họ tên và Lớp!');
+            return;
+        }
+
+        document.getElementById('displayName').innerText = name;
+        document.getElementById('displayClass').innerText = cls;
+        document.getElementById('loginModal').style.display = 'none';
+
+        let timeLeft = 45 * 60;
+        timerInterval = setInterval(() => {
+            let minutes = Math.floor(timeLeft / 60);
+            let seconds = timeLeft % 60;
+            document.getElementById('timeDisplay').innerText = 
+                `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                alert("Đã hết thời gian làm bài!");
+                submitExam();
+            }
+            timeLeft--;
+        }, 1000);
+    }
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        
+        document.getElementById(`tab-${tabName}`).style.display = 'block';
+        event.currentTarget.classList.add('active');
+    }
+
+    function submitExam() {
+        clearInterval(timerInterval);
+        let correctCount = 0;
+        const total = 60;
+
+        // Chấm Tiếng Việt
+        vnQuestions.forEach((q, idx) => {
+            let isCorrect = false, correctAnsText = q.a || "";
+            if (q.type === 'mcq') {
+                if (document.querySelector(`input[name="vn_${idx}"]:checked`)?.value === q.a) isCorrect = true;
+            } else if (q.type === 'fill') {
+                if (document.getElementById(`vn_${idx}_input`)?.value.trim().toLowerCase() === q.a.toLowerCase()) isCorrect = true;
+            } else if (q.type === 'essay') {
+                const ans = document.getElementById(`vn_${idx}_essay`)?.value.trim().toLowerCase();
+                if (q.keywords && q.keywords.some(kw => ans.includes(kw))) isCorrect = true;
+                correctAnsText = `Gợi ý chứa từ: ${q.keywords ? q.keywords.join(', ') : ''}`;
+            }
+            if (isCorrect) correctCount++;
+            showFb(`qc-vn-${idx}`, isCorrect, correctAnsText);
+        });
+
+        // Chấm Toán
+        mathQuestions.forEach((q, idx) => {
+            let isCorrect = false, correctAnsText = q.a || "";
+            if (q.type === 'mcq') {
+                if (document.querySelector(`input[name="math_${idx}"]:checked`)?.value === q.a) isCorrect = true;
+            } else if (q.type === 'fill') {
+                if (document.getElementById(`math_${idx}_input`)?.value.trim().replaceAll(' ', '') === q.a) isCorrect = true;
+            } else if (q.type === 'essay') {
+                const ans = document.getElementById(`math_${idx}_essay`)?.value.trim().toLowerCase();
+                if (q.a && ans.includes(q.a)) isCorrect = true;
+                if (q.keywords && q.keywords.some(kw => ans.includes(kw))) isCorrect = true;
+                correctAnsText = q.a || `Gợi ý: ${q.keywords ? q.keywords.join(', ') : ''}`;
+            }
+            if (isCorrect) correctCount++;
+            showFb(`qc-math-${idx}`, isCorrect, correctAnsText);
+        });
+
+        // Chấm Tiếng Anh
+        engQuestions.forEach((q, idx) => {
+            let isCorrect = false, correctAnsText = q.a || "";
+            if (q.type === 'mcq') {
+                if (document.querySelector(`input[name="eng_${idx}"]:checked`)?.value === q.a) isCorrect = true;
+            } else if (q.type === 'fill') {
+                if (document.getElementById(`eng_${idx}_input`)?.value.trim().toLowerCase() === q.a.toLowerCase()) isCorrect = true;
+            } else if (q.type === 'essay') {
+                const ans = document.getElementById(`eng_${idx}_essay`)?.value.trim().toLowerCase();
+                if (q.keywords && q.keywords.some(kw => ans.includes(kw))) isCorrect = true;
+                correctAnsText = `Gợi ý từ: ${q.keywords ? q.keywords.join(', ') : ''}`;
+            }
+            if (isCorrect) correctCount++;
+            showFb(`qc-eng-${idx}`, isCorrect, correctAnsText);
+        });
+
+        const finalScore = ((correctCount / total) * 10).toFixed(1);
+
+        document.getElementById('resultScreen').style.display = 'block';
+        document.getElementById('scoreText').innerText = `${finalScore} / 10 Điểm`;
+        document.getElementById('resultDetail').innerText = `Em đã làm đúng ${correctCount}/${total} câu hỏi. Lời giải chi tiết đã hiển thị ngay bên dưới từng câu!`;
+        
+        document.getElementById('btnSubmitExam').style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function showFb(cardId, isCorrect, rightAns) {
+        const card = document.getElementById(cardId);
+        const fb = card.querySelector('.feedback');
+        fb.style.display = 'block';
+        if (isCorrect) {
+            fb.className = 'feedback correct';
+            fb.innerHTML = `<i class="fa-solid fa-circle-check"></i> Đúng rồi! Lời giải/Đáp án: <b>${rightAns}</b>`;
+        } else {
+            fb.className = 'feedback wrong';
+            fb.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Chưa chính xác. Đáp án đúng: <b>${rightAns}</b>`;
+        }
+    }
+
+    window.onload = renderQuiz;
+</script>
+</body>
+</html>
